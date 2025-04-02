@@ -15,21 +15,25 @@ const pool = mysql.createPool({
   port: process.env.DB_PORT,
 });
 
-app.post('/validate', async (req, res) => {
-  const { name, phone, table } = req.body;
-  if (!name || !phone || !table) return res.status(400).json({ error: 'Missing fields' });
+app.post("/valid", async (req, res) => {
+  const { name, phone } = req.body;
 
-  const phoneCleaned = phone.replace(/-/g, '');
-  try {
-    const [rows] = await pool.execute(
-      `SELECT COUNT(*) as count FROM \`${table}\` WHERE name = ? AND REPLACE(mobile_phone_no, '-', '') = ?`,
-      [name, phoneCleaned]
-    );
+  if (!name || !phone) {
+    return res.status(400).json({ valid: false, message: "이름이나 연락처가 없습니다." });
+  }
 
-    res.json({ valid: rows[0].count > 0 });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'DB query error' });
+  // DB에서 비교하는 로직
+  const connection = await mysql.createConnection(dbConfig);
+  const [rows] = await connection.execute(
+    "SELECT * FROM member WHERE name = ? AND phone = ?",
+    [name, phone]
+  );
+  connection.end();
+
+  if (rows.length > 0) {
+    return res.json({ valid: true });
+  } else {
+    return res.json({ valid: false });
   }
 });
 
