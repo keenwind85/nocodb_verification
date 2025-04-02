@@ -1,25 +1,24 @@
 console.log("✅ nocodb_verification server started!");
-
-// Node.js Express 서버 예제 코드
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
-
 const app = express();
 app.use(bodyParser.json());
 
-// MySQL 연결 설정
+// MySQL 연결 설정 - 환경변수 사용
 const dbConfig = {
-  host: 'ssm-production.ctwog2ayi6l4.ap-northeast-2.rds.amazonaws.com',
-  user: 'admin_view',
-  password: 'password',
-  database: 'ssm'
+  host: process.env.DB_HOST || 'ssm-production.ctwog2ayi6l4.ap-northeast-2.rds.amazonaws.com',
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || 'admin_view',
+  password: process.env.DB_PASSWORD || 'password',
+  database: process.env.DB_NAME || 'ssm'
 };
 
-// NocoDB API 설정
-const NOCODB_URL = 'https://nocodb-railway-production-0ba7.up.railway.app';
-const API_TOKEN = 'rcV35wXwokAY5UgGbcwcIJQCvRqeOrtQXmFIAeYM';
+// NocoDB API 설정 - API_TOKEN 환경변수로 관리 권장
+const NOCODB_URL = process.env.NOCODB_URL || 'https://nocodb-railway-production-0ba7.up.railway.app';
+const API_TOKEN = process.env.API_TOKEN || 'rcV35wXwokAY5UgGbcwcIJQCvRqeOrtQXmFIAeYM';
+
 
 // 웹훅 엔드포인트 - NocoDB의 "before update" 웹훅으로 설정
 app.post('/validate-ward', async (req, res) => {
