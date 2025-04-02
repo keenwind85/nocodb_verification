@@ -1,9 +1,12 @@
 {
-  "name": "nocodb-member-validator",
+  "name": "member-validator",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
-    "mysql2": "^3.3.0"
+    "mysql2": "^3.9.2"
   }
 }
