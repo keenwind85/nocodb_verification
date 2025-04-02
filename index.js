@@ -7,6 +7,7 @@ const app = express();
 
 app.use(express.json());
 
+// DB 연결 풀 생성
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -22,20 +23,31 @@ app.post("/valid", async (req, res) => {
     return res.status(400).json({ valid: false, message: "피보호자 이름이나 연락처가 없습니다." });
   }
 
-  // DB에서 비교하는 로직
-  const connection = await mysql.createConnection(dbConfig);
-  const [rows] = await connection.execute(
-    "SELECT * FROM ward_active_members WHERE 피보호자_이름 = ? AND 피보호자_연락처 = ?",
-    [피보호자_이름, 피보호자_연락처]
-  );
-  connection.end();
+  try {
+    const conn = await pool.getConnection();
 
-  if (rows.length > 0) {
-    return res.json({ valid: true });
-  } else {
-    return res.json({ valid: false });
+    const query = `
+      SELECT * FROM ward_active_members 
+      WHERE name = ? 
+        AND REPLACE(mobile_phone_no, '-', '') = REPLACE(?, '-', '')
+    `;
+
+    const [rows] = await conn.execute(query, [피보호자_이름, 피보호자_연락처]);
+    conn.release();
+
+    if (rows.length > 0) {
+      return res.json({ valid: true });
+    } else {
+      return res.json({ valid: false, message: "일치하는 회원 정보가 없습니다." });
+    }
+
+  } catch (error) {
+    console.error("❌ DB 오류:", error);
+    return res.status(500).json({ valid: false, message: "서버 오류 발생" });
   }
 });
 
+// 서버 실행
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`✅ Server running on port ${port}`));
+
