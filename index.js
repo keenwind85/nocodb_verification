@@ -16,17 +16,17 @@ const pool = mysql.createPool({
 });
 
 app.post("/valid", async (req, res) => {
-  const { name, phone } = req.body;
+  const { 피보호자_이름, 피보호자_연락처 } = req.body;
 
-  if (!name || !phone) {
-    return res.status(400).json({ valid: false, message: "이름이나 연락처가 없습니다." });
+  if (!피보호자_이름 || !피보호자_연락처) {
+    return res.status(400).json({ valid: false, message: "피보호자 이름이나 연락처가 없습니다." });
   }
 
   // DB에서 비교하는 로직
   const connection = await mysql.createConnection(dbConfig);
   const [rows] = await connection.execute(
-    "SELECT * FROM member WHERE name = ? AND phone = ?",
-    [name, phone]
+    "SELECT * FROM ward_active_members WHERE 피보호자_이름 = ? AND 피보호자_연락처 = ?",
+    [피보호자_이름, 피보호자_연락처]
   );
   connection.end();
 
