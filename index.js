@@ -24,16 +24,15 @@ const dbConfig = {
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
 
-app.post("/validate-ward", async (req, res) => {
+app.post('/validate-ward', async (req, res) => {
   try {
     console.log("✅ 받은 데이터:", JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
-    const recordId = req.body?.id; // ✅ UUID 값 (예: c98fd825-xxxx...)
+    const recordId = req.body?.id;  // ✅ 여기서 선언
+    console.log("📌 PATCH 대상 recordId:", recordId);  // ✅ 여기서 출력
 
-    if (!record || !recordId) {
-      return res.status(400).json({ valid: false, message: "레코드 없음" });
-    }
+    if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
 
     const { 피보호자_이름, 피보호자_연락처 } = record;
 
