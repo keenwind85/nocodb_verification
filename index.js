@@ -7,7 +7,7 @@ const axios = require('axios');
 const app = express();
 app.use(bodyParser.json());
 
-// MySQL 연결 설정 - 환경변수 사용
+// ✅ MySQL 연결 설정 (환경변수 또는 기본값)
 const dbConfig = {
   host: process.env.DB_HOST || 'ssm-production.ctwog2ayi6l4.ap-northeast-2.rds.amazonaws.com',
   port: process.env.DB_PORT || 3306,
@@ -16,10 +16,11 @@ const dbConfig = {
   database: process.env.DB_NAME || 'ssm'
 };
 
-// NocoDB API 설정
+// ✅ NocoDB API 설정
 const NOCODB_URL = process.env.NOCODB_URL || 'https://nocodb-railway-production-0ba7.up.railway.app';
 const API_TOKEN = process.env.API_TOKEN || 'rcV35wXwokAY5UgGbcwcIJQCvRqeOrtQXmFIAeYM';
 
+// ✅ 웹훅 검증 엔드포인트
 app.post('/validate-ward', async (req, res) => {
   try {
     console.log('✅ 받은 데이터:', JSON.stringify(req.body, null, 2));
@@ -29,10 +30,13 @@ app.post('/validate-ward', async (req, res) => {
 
     const { 피보호자_이름, 피보호자_연락처, id: recordId } = record;
 
+    // ❗이름/연락처 둘 다 없으면 검증 스킵
     if (!피보호자_이름 || !피보호자_연락처) {
+      console.log('ℹ️ 이름 또는 연락처 없음 → 검증 생략');
       return res.status(200).json({ valid: true });
     }
 
+    // ✅ MySQL DB 연결 및 조회
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
       'SELECT * FROM ward_active_members WHERE name = ? AND mobile_phone_no = ?',
@@ -47,6 +51,8 @@ app.post('/validate-ward', async (req, res) => {
       return res.status(200).json({ valid: true });
     } else {
       console.log('❌ 검증 실패: 매칭된 회원 없음');
+
+      // ⚠️ 입력값 초기화 + 경고 메시지 삽입
       await axios.patch(
         `${NOCODB_URL}/api/v2/tables/Matching_request/records/${recordId}`,
         {
@@ -73,11 +79,12 @@ app.post('/validate-ward', async (req, res) => {
   }
 });
 
-
+// ✅ 서버 상태 확인용 엔드포인트
 app.get('/test', (req, res) => {
   res.send('웹훅 서버가 정상 작동 중입니다.');
 });
 
+// ✅ 서버 실행
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
