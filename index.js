@@ -25,13 +25,14 @@ app.post('/validate-ward', async (req, res) => {
     console.log('✅ 받은 데이터:', JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
+    const recordId = req.body.id; // ← 여기로 수정!
+
     if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
 
     const { 피보호자_이름, 피보호자_연락처 } = record;
-    const recordId = record.id; // NocoDB 내부 고유 ID
 
     if (!피보호자_이름 || !피보호자_연락처) {
-      return res.status(200).json({ valid: true });
+    return res.status(200).json({ valid: true });
     }
 
     const connection = await mysql.createConnection(dbConfig);
