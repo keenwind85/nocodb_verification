@@ -55,17 +55,21 @@ app.post('/validate-ward', async (req, res) => {
 
       // 경고 메시지만 업데이트 (레코드는 그대로 유지)
       await axios.patch(
-        `${NOCODB_URL}/api/v2/tables/강제매칭.Matching_request/records/${recordUUID}`,
-        {
-          경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.',
+       `${NOCODB_URL}/api/v2/tables/강제매칭.Matching_request/records/${recordUUID}`,
+       {
+        경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.',
+       },
+       {
+        headers: {
+          'xc-token': API_TOKEN,
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'xc-token': API_TOKEN,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+       }
+      ).then(resp => {
+        console.log("✅ NocoDB PATCH 응답:", resp.status, resp.data);
+      }).catch(err => {
+        console.error("❌ PATCH 실패:", err.response?.status, err.response?.data || err.message);
+      });
 
       return res.status(200).json({
         valid: false,
