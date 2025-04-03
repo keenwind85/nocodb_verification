@@ -52,7 +52,7 @@ app.post('/validate-ward', async (req, res) => {
 
       // 경고 메시지 업데이트 (UUID 사용!)
       await axios.patch(
-        `${NOCODB_URL}/api/v2/tables/mou0ayf479ho5i6/records/${recordUUID}`,
+        `${NOCODB_URL}/api/v2/tables/mou0ayf479ho5i6/records/${recordUUID}`
         {
           경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.',
         },
