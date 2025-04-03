@@ -62,6 +62,7 @@ app.post('/validate-ward', async (req, res) => {
         data: {
           피보호자_이름: null,
           피보호자_연락처: null
+          경고_메시지: '일치하지 않는 피보호자 정보입니다.'
         }
       });
 
