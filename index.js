@@ -25,32 +25,31 @@ app.post('/validate-ward', async (req, res) => {
   try {
     console.log('받은 데이터:', req.body);
 
-    // NocoDB에서 전송된 데이터 추출
-    const { data } = req.body;
-    const { 피보호자_이름, 피보호자_연락처, id: recordId } = data;
-
-    // 값이 없으면 스킵
-    if (!피보호자_이름 || !피보호자_연락처) {
-      return res.status(200).send({ valid: true });
+    const record = req.body?.data?.rows?.[0]; // rows[0] 접근
+    if (!record) {
+      return res.status(400).json({ valid: false, message: '유효한 레코드가 없습니다.' });
     }
 
-    // MySQL 연결 및 검증
-    const connection = await mysql.createConnection(dbConfig);
+    const { 피보호자_이름, 피보호자_연락처, id: recordId } = record;
 
+    if (!피보호자_이름 || !피보호자_연락처) {
+      return res.status(200).json({ valid: true });
+    }
+
+    const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
       'SELECT * FROM ward_active_members WHERE name = ? AND mobile_phone_no = ?',
       [피보호자_이름, 피보호자_연락처]
     );
-
     await connection.end();
 
     const isValid = rows && rows.length > 0;
 
     if (isValid) {
-      console.log('검증 성공: 일치하는 피보호자 정보 찾음');
-      return res.status(200).send({ valid: true });
+      console.log('✅ 검증 성공');
+      return res.status(200).json({ valid: true });
     } else {
-      console.log('검증 실패: 일치하는 피보호자 정보 없음');
+      console.log('❌ 검증 실패');
 
       await axios({
         method: 'patch',
@@ -65,6 +64,18 @@ app.post('/validate-ward', async (req, res) => {
           경고_메시지: '일치하지 않는 피보호자 정보입니다.'
         }
       });
+
+      return res.status(200).json({
+        valid: false,
+        message: '일치하는 피보호자 정보가 없습니다. 입력이 취소되었습니다.'
+      });
+    }
+  } catch (error) {
+    console.error('서버 오류:', error);
+    res.status(500).json({ error: '서버 오류 발생' });
+  }
+});
+
 
       return res.status(200).send({
         valid: false,
