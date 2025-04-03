@@ -25,14 +25,17 @@ app.post('/validate-ward', async (req, res) => {
     console.log('✅ 받은 데이터:', JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
-    const recordId = req.body.id; // ← 여기로 수정!
+    const recordId = record?.table_id;
 
-    if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
+    if (!record || !recordId) {
+      return res.status(400).json({ valid: false, message: '레코드 정보가 없거나 table_id가 없습니다.' });
+    }
 
     const { 피보호자_이름, 피보호자_연락처 } = record;
 
+    // 이름과 연락처가 모두 있는 경우만 검증
     if (!피보호자_이름 || !피보호자_연락처) {
-    return res.status(200).json({ valid: true });
+      return res.status(200).json({ valid: true });
     }
 
     const connection = await mysql.createConnection(dbConfig);
@@ -50,7 +53,6 @@ app.post('/validate-ward', async (req, res) => {
     } else {
       console.log('❌ 검증 실패: 매칭된 회원 없음');
 
-      // 잘못된 데이터일 경우 경고 메시지만 업데이트
       await axios.patch(
         `${NOCODB_URL}/api/v2/tables/Matching_request/records/${recordId}`,
         {
