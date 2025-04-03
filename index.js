@@ -24,11 +24,10 @@ app.post('/validate-ward', async (req, res) => {
     console.log("✅ 받은 데이터:", JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
-    const recordId = req.body?.id; // UUID
-    const tablePrimaryKey = record?.table_id; // 실제 레코드 ID
+    const recordUUID = req.body?.id; // ✅ 실제 PATCH에 사용될 UUID
 
-    console.log("📌 PATCH 대상 record UUID:", recordId);
-    console.log("📌 NocoDB 레코드 기본키(table_id):", tablePrimaryKey);
+    console.log("📌 PATCH 대상 record UUID:", recordUUID);
+    console.log("📌 NocoDB 레코드 내부 숫자 ID (table_id):", record?.table_id);
 
     if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
 
@@ -51,8 +50,9 @@ app.post('/validate-ward', async (req, res) => {
     } else {
       console.log("❌ 검증 실패: DB에 일치하는 보호자 정보 없음");
 
+      // 경고 메시지 업데이트 (UUID 사용!)
       await axios.patch(
-        `${NOCODB_URL}/api/v2/tables/mou0ayf479ho5i6/records/${tablePrimaryKey}`, // 여기 주의
+        `${NOCODB_URL}/api/v2/tables/mou0ayf479ho5i6/records/${recordUUID}`,
         {
           경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.',
         },
@@ -75,6 +75,7 @@ app.post('/validate-ward', async (req, res) => {
   }
 });
 
+// 상태 확인용
 app.get('/test', (req, res) => {
   res.send('웹훅 서버가 정상 작동 중입니다.');
 });
