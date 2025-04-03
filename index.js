@@ -1,4 +1,7 @@
 console.log("✅ nocodb_verification server started!");
+console.log("📌 PATCH 대상 recordId:", recordId);
+console.log("📌 NocoDB record UUID (for PATCH):", req.body?.id);
+console.log("📌 잘못된 table_id (숫자):", record?.table_id);
 
 const express = require("express");
 const bodyParser = require("body-parser");
