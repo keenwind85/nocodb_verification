@@ -28,7 +28,7 @@ app.post('/validate-ward', async (req, res) => {
     const record = req.body?.data?.rows?.[0];
     if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
 
-    const { 피보호자_이름, 피보호자_연락처, id: recordId } = record;
+    const { 피보호자_이름, 피보호자_연락처, table_id: recordId } = record;
 
     // ❗이름/연락처 둘 다 없으면 검증 스킵
     if (!피보호자_이름 || !피보호자_연락처) {
