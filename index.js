@@ -22,12 +22,10 @@ const API_TOKEN = process.env.API_TOKEN || 'rcV35wXwokAY5UgGbcwcIJQCvRqeOrtQXmFI
 
 app.post('/validate-ward', async (req, res) => {
   try {
-    console.log('받은 데이터:', req.body);
+    console.log('✅ 받은 데이터:', JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
-    if (!record) {
-      return res.status(400).json({ valid: false, message: '유효한 레코드가 없습니다.' });
-    }
+    if (!record) return res.status(400).json({ valid: false, message: '레코드 없음' });
 
     const { 피보호자_이름, 피보호자_연락처, id: recordId } = record;
 
@@ -42,38 +40,39 @@ app.post('/validate-ward', async (req, res) => {
     );
     await connection.end();
 
-    const isValid = rows && rows.length > 0;
+    const isValid = rows.length > 0;
 
     if (isValid) {
-      console.log('✅ 검증 성공');
+      console.log('✅ 검증 성공: 매칭된 회원 존재');
       return res.status(200).json({ valid: true });
     } else {
-      console.log('❌ 검증 실패');
-
-      await axios({
-        method: 'patch',
-        url: `${NOCODB_URL}/api/v2/tables/Matching_request/records/${recordId}`,
-        headers: {
-          'xc-token': API_TOKEN,
-          'Content-Type': 'application/json'
-        },
-        data: {
+      console.log('❌ 검증 실패: 매칭된 회원 없음');
+      await axios.patch(
+        `${NOCODB_URL}/api/v2/tables/Matching_request/records/${recordId}`,
+        {
           피보호자_이름: null,
           피보호자_연락처: null,
-          경고_메시지: '일치하지 않는 피보호자 정보입니다.'
+          경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.'
+        },
+        {
+          headers: {
+            'xc-token': API_TOKEN,
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
 
       return res.status(200).json({
         valid: false,
-        message: '일치하는 피보호자 정보가 없습니다. 입력이 취소되었습니다.'
+        message: '일치하는 보호자 정보가 없습니다. 입력이 취소되었습니다.'
       });
     }
-  } catch (error) {
-    console.error('서버 오류:', error);
-    res.status(500).json({ error: '서버 오류 발생' });
+  } catch (err) {
+    console.error('❗서버 오류:', err);
+    res.status(500).json({ error: '내부 서버 오류 발생' });
   }
 });
+
 
 app.get('/test', (req, res) => {
   res.send('웹훅 서버가 정상 작동 중입니다.');
