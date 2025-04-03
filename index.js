@@ -16,16 +16,15 @@ const dbConfig = {
   database: process.env.DB_NAME || 'ssm'
 };
 
-// NocoDB API 설정 - API_TOKEN 환경변수로 관리 권장
+// NocoDB API 설정
 const NOCODB_URL = process.env.NOCODB_URL || 'https://nocodb-railway-production-0ba7.up.railway.app';
 const API_TOKEN = process.env.API_TOKEN || 'rcV35wXwokAY5UgGbcwcIJQCvRqeOrtQXmFIAeYM';
 
-// 웹훅 엔드포인트 - NocoDB의 "before update" 웹훅으로 설정
 app.post('/validate-ward', async (req, res) => {
   try {
     console.log('받은 데이터:', req.body);
 
-    const record = req.body?.data?.rows?.[0]; // rows[0] 접근
+    const record = req.body?.data?.rows?.[0];
     if (!record) {
       return res.status(400).json({ valid: false, message: '유효한 레코드가 없습니다.' });
     }
@@ -76,23 +75,11 @@ app.post('/validate-ward', async (req, res) => {
   }
 });
 
-
-      return res.status(200).send({
-        valid: false,
-        message: '일치하는 피보호자 정보가 없습니다. 입력이 취소되었습니다.'
-      });
-    }
-  } catch (error) {
-    console.error('오류 발생:', error);
-    res.status(500).send({ error: '서버 오류 발생' });
-  }
-});
-
 app.get('/test', (req, res) => {
   res.send('웹훅 서버가 정상 작동 중입니다.');
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
+  console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
 });
