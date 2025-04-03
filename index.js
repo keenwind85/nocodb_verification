@@ -57,7 +57,7 @@ app.post('/validate-ward', async (req, res) => {
       console.log("❌ 검증 실패: DB에 일치하는 보호자 정보 없음");
 
       await axios.patch(
-        `${NOCODB_URL}/api/v2/tables/Matching_request.Matching_request/records/${recordUUID}`,
+        `${NOCODB_URL}/api/v2/tables/${table_id}/records/${recordUUID}`,
         {
           경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.'
         },
