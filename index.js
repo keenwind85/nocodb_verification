@@ -64,4 +64,5 @@ app.post('/validate-ward', async (req, res) => {
     }
 
     // 보호자 정보 확인
-    const connection = await mysql.createConnection(dbConfig
+    const connection = await mysql.createConnection(dbConfig);
+
