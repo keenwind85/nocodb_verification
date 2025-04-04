@@ -1,4 +1,5 @@
 console.log("✅ nocodb_verification server started!");
+console.log("🔎 GET 요청 URL:", getUrl);
 
 const express = require('express');
 const mysql = require('mysql2/promise');
