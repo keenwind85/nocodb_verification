@@ -1,5 +1,4 @@
 console.log("✅ nocodb_verification server started!");
-console.log("🔎 GET 요청 URL:", getUrl);
 
 const express = require('express');
 const mysql = require('mysql2/promise');
@@ -82,6 +81,7 @@ app.post('/validate-ward', async (req, res) => {
 
     // 정보 불일치 → NocoDB 레코드 수정
     const getUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(table_id,eq,${table_id})`;
+    console.log("🔎 GET 요청 URL:", getUrl);
     const getResp = await axios.get(getUrl, {
       headers: { 'xc-token': API_TOKEN }
     });
