@@ -26,6 +26,17 @@ app.get('/test', (req, res) => {
   res.send('✅ 웹훅 서버가 정상 작동 중입니다.');
 });
 
+
+app.get('/columns', async (req, res) => {
+  const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
+  const result = await axios.get(url, {
+    headers: { 'xc-token': API_TOKEN }
+  });
+  res.json(result.data);
+});
+
+
+
 app.post('/validate-ward', async (req, res) => {
   try {
     console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2));
