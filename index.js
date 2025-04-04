@@ -26,15 +26,12 @@ const tableName = 'Matching_request';  // 테이블 이름 정확히 입력
 
 app.post('/validate-ward', async (req, res) => {
   try {
-    console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2));
-    
     const record = req.body?.data?.rows?.[0];
-    const recordUUID = req.body?.id;
+    const { table_id, 피보호자_이름, 피보호자_연락처 } = record || {};
 
-    const { 피보호자_이름, 피보호자_연락처 } = record || {};
-
-    if (!record) {
-      return res.status(400).json({ valid: false, message: '레코드 없음' });
+    if (!table_id) {
+      console.error("❗ table_id 값이 없습니다.");
+      return res.status(400).json({ error: 'table_id 값이 없습니다.' });
     }
 
     if (!피보호자_이름 || !피보호자_연락처) {
@@ -51,7 +48,7 @@ app.post('/validate-ward', async (req, res) => {
     if (rows.length > 0) {
       return res.status(200).json({ valid: true });
     } else {
-      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records/${recordUUID}`;
+      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records?where=(table_id,eq,${table_id})`;
       console.log("🚧 patchUrl 확인:", patchUrl);
 
       await axios.patch(
