@@ -54,6 +54,7 @@ app.post('/validate-ward', async (req, res) => {
     console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
+    console.log("📌 레코드 키 목록:", Object.keys(record));
     const { table_id, 피보호자_이름, 피보호자_연락처 } = record || {};
 
     if (!table_id) {
