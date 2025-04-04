@@ -20,22 +20,20 @@ const dbConfig = {
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
 const baseName = 'poc0lvbq6jzglb1';   // Base ID
-const tableId = 'mou0ayf479ho5i6';    // Table ID (주의: 이름 아님!)
+const tableId = 'm9wf5k21uzgur76';    // 변경된 Table ID
 
+// 헬스 체크
 app.get('/test', (req, res) => {
   res.send('✅ 웹훅 서버가 정상 작동 중입니다.');
 });
 
-
+// 디버깅용 컬럼 확인 라우트
 app.get('/columns', async (req, res) => {
   try {
     const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
-    console.log("🔍 NocoDB Columns 호출 URL:", url);
-
     const result = await axios.get(url, {
       headers: { 'xc-token': API_TOKEN }
     });
-
     res.json(result.data);
   } catch (err) {
     console.error("❗ columns 조회 실패:", err.message);
@@ -46,23 +44,21 @@ app.get('/columns', async (req, res) => {
   }
 });
 
-
-
-
+// 웹훅 처리 라우트
 app.post('/validate-ward', async (req, res) => {
   try {
     console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2));
 
     const record = req.body?.data?.rows?.[0];
     console.log("📌 레코드 키 목록:", Object.keys(record));
-    const { table_id, 피보호자_이름, 피보호자_연락처 } = record || {};
+    const { id, ward_name, ward_phone } = record || {};
 
-    if (!table_id) {
-      console.error("❗ table_id 값이 없습니다.");
-      return res.status(400).json({ error: 'table_id 값이 없습니다.' });
+    if (!id) {
+      console.error("❗ id 값이 없습니다.");
+      return res.status(400).json({ error: 'id 값이 없습니다.' });
     }
 
-    if (!피보호자_이름 || !피보호자_연락처) {
+    if (!ward_name || !ward_phone) {
       return res.status(200).json({ valid: true }); // 정보 없으면 통과
     }
 
@@ -70,7 +66,7 @@ app.post('/validate-ward', async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute(
       'SELECT * FROM ward_active_members WHERE name = ? AND mobile_phone_no = ?',
-      [피보호자_이름, 피보호자_연락처]
+      [ward_name, ward_phone]
     );
     await connection.end();
 
@@ -79,26 +75,13 @@ app.post('/validate-ward', async (req, res) => {
       return res.status(200).json({ valid: true });
     }
 
-    // 정보 불일치 → NocoDB 레코드 수정
-    const getUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(table_id,eq,${table_id})`;
-    console.log("🔎 GET 요청 URL:", getUrl);
-    const getResp = await axios.get(getUrl, {
-      headers: { 'xc-token': API_TOKEN }
-    });
-
-    if (!getResp.data || getResp.data.list.length === 0) {
-      console.error("❗ NocoDB에서 레코드를 찾을 수 없습니다.");
-      return res.status(404).json({ error: '레코드 없음' });
-    }
-
-    const actualRecordUUID = getResp.data.list[0].id;
-
-    const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(table_id,eq,${table_id})`;
+    // 정보 불일치 시 조건부 PATCH (UUID 없이)
+    const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(id,eq,${id})`;
     console.log("🚧 patchUrl 확인:", patchUrl);
 
     await axios.patch(
       patchUrl,
-      { 경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.' },
+      { warning_message: '[경고] 일치하지 않는 보호자 정보입니다.' },
       {
         headers: {
           'xc-token': API_TOKEN,
