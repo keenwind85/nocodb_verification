@@ -17,28 +17,17 @@ const dbConfig = {
 };
 
 // NocoDB 설정
-const NOCODB_URL = process.env.NOCODB_URL; // NocoDB URL
+const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
-
-// 실제 사용하는 Base 및 Table 이름을 정확히 넣어주세요!
-const baseName = encodeURIComponent('Request');  
-const tableName = encodeURIComponent('Matching_request');
+const tableApiId = 'mou0ayf479ho5i6'; // 실제 테이블 API ID 사용!
 
 app.post('/validate-ward', async (req, res) => {
   try {
-    console.log("✅ 받은 데이터:", JSON.stringify(req.body, null, 2));
-
     const record = req.body?.data?.rows?.[0];
     const recordUUID = req.body?.id;
     const { 피보호자_이름, 피보호자_연락처 } = record || {};
 
-    console.log("📌 NocoDB record UUID:", recordUUID);
-
-    if (!record) {
-      return res.status(400).json({ valid: false, message: '레코드 없음' });
-    }
-
-    if (!피보호자_이름 || !피보호자_연락처) {
+    if (!record || !피보호자_이름 || !피보호자_연락처) {
       return res.status(200).json({ valid: true });
     }
 
@@ -50,14 +39,9 @@ app.post('/validate-ward', async (req, res) => {
     await connection.end();
 
     if (rows.length > 0) {
-      console.log("✅ 검증 성공: DB에 일치하는 보호자 정보 있음");
       return res.status(200).json({ valid: true });
     } else {
-      console.log("❌ 검증 실패: DB에 일치하는 보호자 정보 없음");
-
-      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records/${recordUUID}`;
-
-      console.log("📌 PATCH 요청 URL:", patchUrl);
+      const patchUrl = `${NOCODB_URL}/api/v2/tables/${tableApiId}/records/${recordUUID}`;
 
       await axios.patch(
         patchUrl,
@@ -70,25 +54,14 @@ app.post('/validate-ward', async (req, res) => {
             'Content-Type': 'application/json',
           },
         }
-      ).then(resp => {
-        console.log("✅ PATCH 성공:", resp.status, resp.data);
-      }).catch(err => {
-        console.error("❌ PATCH 실패:", err.response?.status, err.response?.data || err.message);
-      });
+      );
 
-      return res.status(200).json({
-        valid: false,
-        message: '일치하는 보호자 정보가 없습니다.',
-      });
+      return res.status(200).json({ valid: false });
     }
   } catch (err) {
-    console.error("❗ 서버 오류:", err.message || err);
+    console.error("❗ 서버 오류:", err.message || err.response?.data || err);
     return res.status(500).json({ error: '내부 서버 오류 발생' });
   }
-});
-
-app.get('/test', (req, res) => {
-  res.send('웹훅 서버가 정상 작동 중입니다.');
 });
 
 const PORT = process.env.PORT || 3000;
