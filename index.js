@@ -22,7 +22,7 @@ const API_TOKEN = process.env.API_TOKEN;
 const baseName = 'poc0lvbq6jzglb1';
 const tableId = 'm9wf5k21uzgur76';
 
-// 헬스체크
+// 헬스체크 라우트
 app.get('/test', (req, res) => {
   res.send('✅ 웹훅 서버가 정상 작동 중입니다.');
 });
@@ -51,11 +51,13 @@ app.post('/validate-ward', async (req, res) => {
 
     const record = req.body?.data?.rows?.[0];
     console.log("📌 레코드 키 목록:", Object.keys(record));
-    const { id, ward_name, ward_phone } = record || {};
 
-    if (!id) {
-      console.error("❗ id 값이 없습니다.");
-      return res.status(400).json({ error: 'id 값이 없습니다.' });
+    const recordUUID = req.body.id;  // 🔥 핵심 변경: UUID 직접 활용
+    const { ward_name, ward_phone } = record || {};
+
+    if (!recordUUID) {
+      console.error("❗ record UUID가 없습니다.");
+      return res.status(400).json({ error: '레코드 UUID 누락' });
     }
 
     if (!ward_name || !ward_phone) {
@@ -76,20 +78,7 @@ app.post('/validate-ward', async (req, res) => {
       return res.status(200).json({ valid: true });
     }
 
-    // UUID 조회 → PATCH
-    const getUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(id,eq,${id})`;
-    console.log("🔎 getUrl 확인:", getUrl);
-
-    const getResp = await axios.get(getUrl, {
-      headers: { 'xc-token': API_TOKEN }
-    });
-
-    if (!getResp.data || getResp.data.list.length === 0) {
-      console.error("❗ NocoDB에서 해당 레코드를 찾지 못했습니다.");
-      return res.status(404).json({ error: '레코드 없음' });
-    }
-
-    const recordUUID = getResp.data.list[0].id;
+    // 정보 불일치 → PATCH
     const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records/${recordUUID}`;
     console.log("🚧 patchUrl 확인:", patchUrl);
 
@@ -112,6 +101,7 @@ app.post('/validate-ward', async (req, res) => {
   }
 });
 
+// 서버 실행
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
