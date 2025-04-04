@@ -19,13 +19,17 @@ const dbConfig = {
 // NocoDB 설정
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
-const tableApiId = 'mou0ayf479ho5i6'; // 실제 테이블 API ID 사용!
+
+// ⚠️ 추가 필수 변수 선언
+const baseName = encodeURIComponent('강제매칭');
+const tableName = encodeURIComponent('Matching_request');
 
 app.post('/validate-ward', async (req, res) => {
   try {
-    console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2)); // ← 여기를 추가
+    console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2));
+    
     const record = req.body?.data?.rows?.[0];
-    const recordUUID = req.body?.id; // 현재 코드 유지
+    const recordUUID = req.body?.id;
 
     const { 피보호자_이름, 피보호자_연락처 } = record || {};
 
@@ -48,7 +52,7 @@ app.post('/validate-ward', async (req, res) => {
       return res.status(200).json({ valid: true });
     } else {
       const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records/${recordUUID}`;
-      console.log("🚧 patchUrl 확인:", patchUrl); // 추가된 로그 (중요!)
+      console.log("🚧 patchUrl 확인:", patchUrl);
 
       await axios.patch(
         patchUrl,
@@ -64,7 +68,11 @@ app.post('/validate-ward', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+app.get('/test', (req, res) => {
+  res.send('웹훅 서버가 정상 작동 중입니다.');
+});
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
 });
