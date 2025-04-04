@@ -23,11 +23,17 @@ const tableApiId = 'mou0ayf479ho5i6'; // 실제 테이블 API ID 사용!
 
 app.post('/validate-ward', async (req, res) => {
   try {
+    console.log("👉 웹훅 요청 본문:", JSON.stringify(req.body, null, 2)); // ← 여기를 추가
     const record = req.body?.data?.rows?.[0];
-    const recordUUID = req.body?.id;
+    const recordUUID = req.body?.id; // 현재 코드 유지
+
     const { 피보호자_이름, 피보호자_연락처 } = record || {};
 
-    if (!record || !피보호자_이름 || !피보호자_연락처) {
+    if (!record) {
+      return res.status(400).json({ valid: false, message: '레코드 없음' });
+    }
+
+    if (!피보호자_이름 || !피보호자_연락처) {
       return res.status(200).json({ valid: true });
     }
 
@@ -41,25 +47,19 @@ app.post('/validate-ward', async (req, res) => {
     if (rows.length > 0) {
       return res.status(200).json({ valid: true });
     } else {
-      const patchUrl = `${NOCODB_URL}/api/v2/tables/${tableApiId}/records/${recordUUID}`;
+      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records/${recordUUID}`;
+      console.log("🚧 patchUrl 확인:", patchUrl); // 추가된 로그 (중요!)
 
       await axios.patch(
         patchUrl,
-        {
-          경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.',
-        },
-        {
-          headers: {
-            'xc-token': API_TOKEN,
-            'Content-Type': 'application/json',
-          },
-        }
+        { 경고_메시지: '[경고] 일치하지 않는 보호자 정보입니다.' },
+        { headers: { 'xc-token': API_TOKEN, 'Content-Type': 'application/json' } }
       );
 
-      return res.status(200).json({ valid: false });
+      return res.status(200).json({ valid: false, message: '일치하는 보호자 정보가 없습니다.' });
     }
   } catch (err) {
-    console.error("❗ 서버 오류:", err.message || err.response?.data || err);
+    console.error("❗ 서버 오류:", err.message || err);
     return res.status(500).json({ error: '내부 서버 오류 발생' });
   }
 });
