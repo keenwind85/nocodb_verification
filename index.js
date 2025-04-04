@@ -16,13 +16,11 @@ const dbConfig = {
   database: process.env.DB_NAME,
 };
 
-// NocoDB 설정
+// NocoDB 설정 (확정본)
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
-
-// ⚠️ 추가 필수 변수 선언
-const baseName = 'poc0lvbq6jzglb1';  // 🔥 Base ID 사용 (정확한 값)
-const tableName = 'Matching_request';  // 테이블 이름 정확히 입력
+const baseName = 'poc0lvbq6jzglb1';   // Base ID 고정
+const tableName = 'mou0ayf479ho5i6';  // 🚨 이 값으로 필수 변경! (NocoDB 제공 table_id)
 
 app.post('/validate-ward', async (req, res) => {
   try {
