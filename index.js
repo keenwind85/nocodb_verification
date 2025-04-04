@@ -28,11 +28,16 @@ app.get('/test', (req, res) => {
 
 
 app.get('/columns', async (req, res) => {
-  const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
-  const result = await axios.get(url, {
-    headers: { 'xc-token': API_TOKEN }
-  });
-  res.json(result.data);
+  try {
+    const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
+    const result = await axios.get(url, {
+      headers: { 'xc-token': API_TOKEN }
+    });
+    res.json(result.data);
+  } catch (err) {
+    console.error("❗ columns 조회 실패:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 
