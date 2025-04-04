@@ -93,7 +93,7 @@ app.post('/validate-ward', async (req, res) => {
 
     const actualRecordUUID = getResp.data.list[0].id;
 
-    const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records/${actualRecordUUID}`;
+    const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(table_id,eq,${table_id})`;
     console.log("🚧 patchUrl 확인:", patchUrl);
 
     await axios.patch(
