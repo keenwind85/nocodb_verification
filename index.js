@@ -21,8 +21,8 @@ const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
 
 // ⚠️ 추가 필수 변수 선언
-const baseName = encodeURIComponent('Request');
-const tableName = encodeURIComponent('Matching_request');
+const baseName = 'poc0lvbq6jzglb1';  // 🔥 Base ID 사용 (정확한 값)
+const tableName = 'Matching_request';  // 테이블 이름 정확히 입력
 
 app.post('/validate-ward', async (req, res) => {
   try {
