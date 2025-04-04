@@ -30,15 +30,22 @@ app.get('/test', (req, res) => {
 app.get('/columns', async (req, res) => {
   try {
     const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
+    console.log("🔍 NocoDB Columns 호출 URL:", url);
+
     const result = await axios.get(url, {
       headers: { 'xc-token': API_TOKEN }
     });
+
     res.json(result.data);
   } catch (err) {
     console.error("❗ columns 조회 실패:", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+      details: err.response?.data || null
+    });
   }
 });
+
 
 
 
