@@ -16,11 +16,11 @@ const dbConfig = {
   database: process.env.DB_NAME,
 };
 
-// NocoDB 설정 (확정본)
+// NocoDB 설정
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
-const baseName = 'poc0lvbq6jzglb1';   // Base ID 고정
-const tableName = 'mou0ayf479ho5i6';  // 🚨 이 값으로 필수 변경! (NocoDB 제공 table_id)
+const baseName = 'poc0lvbq6jzglb1';
+const tableId = 'mou0ayf479ho5i6';
 
 app.post('/validate-ward', async (req, res) => {
   try {
@@ -46,7 +46,22 @@ app.post('/validate-ward', async (req, res) => {
     if (rows.length > 0) {
       return res.status(200).json({ valid: true });
     } else {
-      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records?where=(table_id,eq,${table_id})`;
+      // 🚨 1단계: table_id로 NocoDB에서 레코드 조회(GET)
+      const getUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(table_id,eq,${table_id})`;
+      const getResp = await axios.get(getUrl, {
+        headers: { 'xc-token': API_TOKEN }
+      });
+
+      if (!getResp.data || getResp.data.list.length === 0) {
+        console.error("❗ NocoDB에서 레코드를 찾을 수 없습니다.");
+        return res.status(404).json({ error: 'NocoDB에서 레코드를 찾을 수 없습니다.' });
+      }
+
+      // 실제 레코드의 UUID(id) 획득
+      const actualRecordUUID = getResp.data.list[0].Id;
+
+      // 🚨 2단계: 획득한 UUID를 사용하여 PATCH 요청
+      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records/${actualRecordUUID}`;
       console.log("🚧 patchUrl 확인:", patchUrl);
 
       await axios.patch(
