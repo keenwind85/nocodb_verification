@@ -17,8 +17,12 @@ const dbConfig = {
 };
 
 // NocoDB 설정
-const NOCODB_URL = process.env.NOCODB_URL; // ✅ https://nocodb-railway-production-0ba7.up.railway.app
+const NOCODB_URL = process.env.NOCODB_URL; // NocoDB URL
 const API_TOKEN = process.env.API_TOKEN;
+
+// 실제 사용하는 Base 및 Table 이름을 정확히 넣어주세요!
+const baseName = encodeURIComponent('Request');  
+const tableName = encodeURIComponent('Matching_request');
 
 app.post('/validate-ward', async (req, res) => {
   try {
@@ -51,7 +55,7 @@ app.post('/validate-ward', async (req, res) => {
     } else {
       console.log("❌ 검증 실패: DB에 일치하는 보호자 정보 없음");
 
-      const patchUrl = `${NOCODB_URL}/api/v2/tables/Matching_request/records/${recordUUID}`;
+      const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableName}/records/${recordUUID}`;
 
       console.log("📌 PATCH 요청 URL:", patchUrl);
 
