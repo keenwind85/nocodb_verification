@@ -19,15 +19,15 @@ const dbConfig = {
 // NocoDB 설정
 const NOCODB_URL = process.env.NOCODB_URL;
 const API_TOKEN = process.env.API_TOKEN;
-const baseName = 'poc0lvbq6jzglb1';   // Base ID
-const tableId = 'm9wf5k21uzgur76';    // 변경된 Table ID
+const baseName = 'poc0lvbq6jzglb1';
+const tableId = 'm9wf5k21uzgur76';
 
-// 헬스 체크
+// 헬스체크
 app.get('/test', (req, res) => {
   res.send('✅ 웹훅 서버가 정상 작동 중입니다.');
 });
 
-// 디버깅용 컬럼 확인 라우트
+// 컬럼 확인용 라우트 (선택)
 app.get('/columns', async (req, res) => {
   try {
     const url = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/columns`;
@@ -59,46 +59,9 @@ app.post('/validate-ward', async (req, res) => {
     }
 
     if (!ward_name || !ward_phone) {
-      return res.status(200).json({ valid: true }); // 정보 없으면 통과
-    }
-
-    // 보호자 정보 확인
-    const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute(
-      'SELECT * FROM ward_active_members WHERE name = ? AND mobile_phone_no = ?',
-      [ward_name, ward_phone]
-    );
-    await connection.end();
-
-    if (rows.length > 0) {
-      console.log("✅ 보호자 정보 일치");
+      console.warn("⛔ ward_name 또는 ward_phone 누락 → 검증 생략");
       return res.status(200).json({ valid: true });
     }
 
-    // 정보 불일치 시 조건부 PATCH (UUID 없이)
-    const patchUrl = `${NOCODB_URL}/api/v2/tables/${baseName}/${tableId}/records?where=(id,eq,${id})`;
-    console.log("🚧 patchUrl 확인:", patchUrl);
-
-    await axios.patch(
-      patchUrl,
-      { warning_message: '[경고] 일치하지 않는 보호자 정보입니다.' },
-      {
-        headers: {
-          'xc-token': API_TOKEN,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
-
-    return res.status(200).json({ valid: false, message: '일치하는 보호자 정보가 없습니다.' });
-
-  } catch (err) {
-    console.error("❗ 서버 오류:", err.message || err);
-    return res.status(500).json({ error: '내부 서버 오류 발생' });
-  }
-});
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`✅ 서버가 포트 ${PORT}에서 실행 중입니다.`);
-});
+    // 보호자 정보 확인
+    const connection = await mysql.createConnection(dbConfig
